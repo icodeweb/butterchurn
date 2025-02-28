@@ -1,0 +1,10 @@
+{
+  "name": "butterchurn-project",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "butterchurn": "^2.6.7",
+    "butterchurn-presets": "^2.4.7",
+    "ws": "^8.18.1"
+  }
+}
