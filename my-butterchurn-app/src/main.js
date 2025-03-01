@@ -1,6 +1,6 @@
 import butterchurn from 'butterchurn';
 import butterchurnPresets from 'butterchurn-presets';
-let input = "mp3";
+let input = "mp3;";
 
 // تأكد من وجود <canvas>
 const canvas = document.querySelector('canvas');
@@ -20,8 +20,30 @@ const visualizer = butterchurn.createVisualizer(audioContext, canvas, {
 // تحميل الـ Presets
 const presets = butterchurnPresets.getPresets();
 let allPresets = Object.keys(butterchurnPresets.getPresets());
-const presetKey = allPresets[15];
-console.log(Object.keys(butterchurnPresets.getPresets()));
+let presetKey = allPresets[15];
+
+let presetSelectElemnt = document.createElement("select");
+allPresets.forEach(preset => {
+  let presetOption = document.createElement("option");
+  presetOption.text = preset
+  presetOption.value = preset
+  presetSelectElemnt.appendChild(presetOption)
+})
+document.body.appendChild(presetSelectElemnt)
+
+presetSelectElemnt.addEventListener("change", () => {
+  presetKey = presetSelectElemnt.value
+  visualizer.loadPreset(presets[presetKey], 5.0);
+})
+
+
+{/* <label for="choices">Choose an option:</label>
+<select id="presetSelect">
+    <option value="option1">Option 1</option>
+    <option value="option2">Option 2</option>
+    <option value="option3">Option 3</option>
+    <option value="option4">Option 4</option>
+</select> */}
 if (presets[presetKey]) {
   visualizer.loadPreset(presets[presetKey], 0.0);
 } else {
@@ -43,7 +65,7 @@ if (input === "mp3") {
       const arrayBuffer = reader.result;
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
       playAudio(audioBuffer);
-      fileInput.remove(); // تنظيف بعد اختيار الملف
+      fileInput.remove();
     };
   });
 
@@ -51,11 +73,11 @@ if (input === "mp3") {
     const source = audioContext.createBufferSource();
     source.buffer = audioBuffer;
     const gainNode = audioContext.createGain();
-    gainNode.gain.value = 1; // مستوى صوت افتراضي
+    gainNode.gain.value = 1;
 
     source.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    visualizer.connectAudio(source); // ربط الصوت بالـ visualizer
+    visualizer.connectAudio(source);
 
     source.start(0);
   }
