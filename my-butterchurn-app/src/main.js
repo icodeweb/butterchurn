@@ -1,6 +1,6 @@
 import butterchurn from 'butterchurn';
 import butterchurnPresets from 'butterchurn-presets';
-let input = "mp3;";
+let input = "mp3";
 
 // تأكد من وجود <canvas>
 const canvas = document.querySelector('canvas');
@@ -29,84 +29,112 @@ allPresets.forEach(preset => {
   presetOption.value = preset
   presetSelectElemnt.appendChild(presetOption)
 })
+// presetSelectElemnt.size = allPresets.length;
+presetSelectElemnt.size = 1;
+let listPresetsElemnt = document.createElement("button");
+listPresetsElemnt.innerText = "⬇️";
+document.body.appendChild(listPresetsElemnt);
 document.body.appendChild(presetSelectElemnt)
 
 presetSelectElemnt.addEventListener("change", () => {
   presetKey = presetSelectElemnt.value
   visualizer.loadPreset(presets[presetKey], 5.0);
 })
+listPresetsElemnt.addEventListener("click", () => {
+  if (presetSelectElemnt.size > 1) {
+    presetSelectElemnt.size = 1;
+    listPresetsElemnt.innerText = "⬇️";
+  } else {
+    presetSelectElemnt.size = 40;
+    listPresetsElemnt.innerText = "⬆️";
+  }
+})
 
-
-{/* <label for="choices">Choose an option:</label>
-<select id="presetSelect">
-    <option value="option1">Option 1</option>
-    <option value="option2">Option 2</option>
-    <option value="option3">Option 3</option>
-    <option value="option4">Option 4</option>
-</select> */}
 if (presets[presetKey]) {
   visualizer.loadPreset(presets[presetKey], 0.0);
 } else {
   console.error("❌ Preset not found!");
 }
-if (input === "mp3") {
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = 'audio/mp3';
-  document.body.appendChild(fileInput);
 
-  fileInput.addEventListener('change', async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
 
-    const reader = new FileReader();
-    reader.readAsArrayBuffer(file);
-    reader.onload = async () => {
-      const arrayBuffer = reader.result;
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      playAudio(audioBuffer);
-      fileInput.remove();
-    };
-  });
+let inputSelectElemnt = document.createElement("select");
+let micOptionElemnt = document.createElement("option");
+micOptionElemnt.value = "mic"
+micOptionElemnt.text = "mic"
+let mp3OptionElemnt = document.createElement("option");
+mp3OptionElemnt.value = "mp3"
+mp3OptionElemnt.text = "mp3"
+inputSelectElemnt.appendChild(micOptionElemnt)
+inputSelectElemnt.appendChild(mp3OptionElemnt)
+document.body.appendChild(inputSelectElemnt)
 
-  function playAudio(audioBuffer) {
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBuffer;
-    const gainNode = audioContext.createGain();
-    gainNode.gain.value = 1;
 
-    source.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    visualizer.connectAudio(source);
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = 'audio/mp3';
+fileInput.style.display = "none";
+document.body.appendChild(fileInput);
 
-    source.start(0);
+
+
+inputSelectElemnt.addEventListener("change", () => {
+  if (inputSelectElemnt.value === "mp3") {
+    fileInput.style.display = "block";
+
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+      reader.onload = async () => {
+        const arrayBuffer = reader.result;
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        playAudio(audioBuffer);
+        fileInput.remove();
+      };
+    });
+
+    function playAudio(audioBuffer) {
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = 1;
+
+      source.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      visualizer.connectAudio(source);
+
+      source.start(0);
+    }
+  } else {
+    fileInput.style.display = "none";
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      const audioSource = audioContext.createMediaStreamSource(stream);
+      visualizer.connectAudio(audioSource);
+    }).catch(err => {
+      console.error("❌ Failed to get audio stream:", err);
+    });
   }
-} else {
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    const audioSource = audioContext.createMediaStreamSource(stream);
-    visualizer.connectAudio(audioSource);
-  }).catch(err => {
-    console.error("❌ Failed to get audio stream:", err);
-  });
-}
+})
 
 
-document.addEventListener('click', async () => {
-  if (audioContext.state === 'suspended') {
-    await audioContext.resume();
-    console.log("✅ AudioContext resumed!");
-  }
-});
-
-// ضبط الحجم
 visualizer.setRendererSize(canvas.width, canvas.height);
 
-// تشغيل الـ visualizer
 function renderFrame() {
   requestAnimationFrame(renderFrame);
   visualizer.render();
 }
 renderFrame();
+
+
+// document.addEventListener('click', async () => {
+//   if (audioContext.state === 'suspended') {
+//     await audioContext.resume();
+//     console.log("✅ AudioContext resumed!");
+//   }
+// });
 
 
 // audioContext = new AudioContext();
